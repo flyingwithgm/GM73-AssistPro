@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GM73 Assist Pro - Offline emergency medical guidance">
+    <meta name="theme-color" content="#0d47a1">
+    <link rel="manifest" href="manifest.json">
+    <title>GM73 Assist Pro - First Response. Zero Delay.</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0d47a1;
+            --secondary: #e53935;
+            --light: #f5f5f5;
+            --dark: #212121;
+            --success: #43a047;
+            --warning: #ff9800;
+        }
+
+        [data-theme="dark"] {
+            --primary: #1565c0;
+            --secondary: #f44336;
+            --light: #424242;
+            --dark: #f5f5f5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            color: var(--secondary);
+            font-size: 1.5rem;
+        }
+
+        .logo h1 {
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .tagline {
+            font-size: 0.8rem;
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--dark);
+            cursor: pointer;
+        }
+
+        .emergency-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .emergency-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .emergency-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .emergency-btn i {
+            font-size: 1.8rem;
+        }
+
+        .emergency-btn span {
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .panic-btn {
+            width: 100%;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            margin: 10px 0;
+            height: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--success);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .guide-container {
+            display: none;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .guide-container.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .guide-title {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .guide-step {
+            margin-bottom: 15px;
+            padding-left: 15px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .guide-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .yes-btn {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .no-btn {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .next-btn {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .back-btn {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .voice-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 400px) {
+            .emergency-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .emergency-btn {
+                padding: 12px;
+            }
+            
+            .emergency-btn i {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-first-aid"></i>
+                <div>
+                    <h1>GM73 Assist Pro</h1>
+                    <p class="tagline">First Response. Zero Delay.</p>
+                </div>
+            </div>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <button class="panic-btn pulse" id="panicBtn">
+            <i class="fas fa-bell"></i> EMERGENCY PANIC MODE
+        </button>
+
+        <div class="emergency-grid">
+            <button class="emergency-btn" data-emergency="unconscious">
+                <i class="fas fa-procedures"></i>
+                <span>Unconscious Person</span>
+            </button>
+            <button class="emergency-btn" data-emergency="bleeding">
+                <i class="fas fa-tint"></i>
+                <span>Severe Bleeding</span>
+            </button>
+            <button class="emergency-btn" data-emergency="burn">
+                <i class="fas fa-fire"></i>
+                <span>Burn Injury</span>
+            </button>
+            <button class="emergency-btn" data-emergency="fracture">
+                <i class="fas fa-bone"></i>
+                <span>Broken Bone</span>
+            </button>
+            <button class="emergency-btn" data-emergency="choking">
+                <i class="fas fa-lungs"></i>
+                <span>Choking</span>
+            </button>
+            <button class="emergency-btn" data-emergency="seizure">
+                <i class="fas fa-brain"></i>
+                <span>Seizure</span>
+            </button>
+            <button class="emergency-btn" data-emergency="allergy">
+                <i class="fas fa-allergies"></i>
+                <span>Allergic Reaction</span>
+            </button>
+            <button class="emergency-btn" data-emergency="notes">
+                <i class="fas fa-notes-medical"></i>
+                <span>My Medical Notes</span>
+            </button>
+        </div>
+
+        <div class="guide-container" id="guideContainer">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <h2 class="guide-title" id="guideTitle"></h2>
+            <div id="guideContent"></div>
+            <div class="guide-actions" id="guideActions"></div>
+        </div>
+    </div>
+
+    <button class="voice-toggle" id="voiceToggle">
+        <i class="fas fa-volume-up"></i>
+    </button>
+
+    <script>
+        // App Configuration
+        const config = {
+            voiceEnabled: false,
+            currentTheme: 'light',
+            currentEmergency: null,
+            currentStep: 0,
+            decisionPath: []
+        };
+
+        // Emergency Decision Trees
+        const emergencyData = {
+            unconscious: {
+                title: "Unconscious Person",
+                steps: [
+                    {
+                        text: "Is the person breathing normally?",
+                        type: "question",
+                        yes: 1,
+                        no: 2
+                    },
+                    {
+                        text: "Place the person in the recovery position: 1. Kneel beside them 2. Place arm nearest to you at right angle 3. Bring other hand to cheek 4. Bend far knee and roll them toward you",
+                        type: "instruction"
+                    },
+                    {
+                        text: "Begin CPR: 1. Call for help 2. Place heel of hand on breastbone 3. Push hard and fast (100-120 compressions per minute) 4. If trained, give 2 rescue breaths after 30 compressions",
+                        type: "instruction"
+                    }
+                ]
+            },
+            bleeding: {
+                title: "Severe Bleeding",
+                steps: [
+                    {
+                        text: "Is the bleeding from a major artery (bright red, spurting blood)?",
+                        type: "question",
+                        yes: 1,
+                        no: 2
+                    },
+                    {
+                        text: "1. Apply direct pressure with clean cloth 2. If bleeding continues, apply pressure to artery above wound 3. Use tourniquet ONLY as last resort 4. Keep victim lying down",
+                        type: "instruction"
+                    },
+                    {
+                        text: "1. Clean wound with clean water if available 2. Apply direct pressure with clean cloth 3. Bandage firmly 4. Watch for signs of infection",
+                        type: "instruction"
+                    }
+                ]
+            },
+            burn: {
+                title: "Burn Injury",
+                steps: [
+                    {
+                        text: "Is this a chemical burn?",
+                        type: "question",
+                        yes: 1,
+                        no: 2
+                    },
+                    {
+                        text: "1. Remove contaminated clothing 2. Rinse with cool running water for 20+ minutes 3. Do not neutralize chemicals 4. Cover loosely with clean cloth",
+                        type: "instruction"
+                    },
+                    {
+                        text: "1. Cool with running water for 10-15 minutes 2. Do not use ice 3. Remove tight items before swelling 4. Cover with sterile dressing 5. Do not break blisters",
+                        type: "instruction"
+                    }
+                ]
+            },
+            choking: {
+                title: "Choking",
+                steps: [
+                    {
+                        text: "Is the person able to cough or speak?",
+                        type: "question",
+                        yes: 1,
+                        no: 2
+                    },
+                    {
+                        text: "Encourage them to keep coughing. Do not interfere unless they stop coughing or become unconscious.",
+                        type: "instruction"
+                    },
+                    {
+                        text: "Perform Heimlich maneuver: 1. Stand behind person 2. Make fist above navel 3. Grasp fist with other hand 4. Give quick upward thrusts 5. Continue until object is expelled or person becomes unconscious",
+                        type: "instruction"
+                    }
+                ]
+            },
+            panic: {
+                title: "Emergency Quick Guide",
+                steps: [
+                    {
+                        text: "Stay calm. Breathe deeply. Select the emergency type:",
+                        type: "options",
+                        options: [
+                            { text: "CPR Instructions", goto: "cpr" },
+                            { text: "Severe Bleeding", goto: "bleeding" },
+                            { text: "Choking", goto: "choking" }
+                        ]
+                    }
+                ],
+                cpr: [
+                    {
+                        text: "CPR Steps: 1. Check responsiveness 2. Call for help 3. 30 chest compressions (2 inches deep) 4. 2 rescue breaths 5. Continue until help arrives",
+                        type: "instruction"
+                    }
+                ]
+            },
+            notes: {
+                title: "My Medical Notes",
+                steps: [
+                    {
+                        text: "Your personal medical information (stored only on this device):",
+                        type: "notes"
+                    }
+                ]
+            }
+        };
+
+        // DOM Elements
+        const themeToggle = document.getElementById('themeToggle');
+        const voiceToggle = document.getElementById('voiceToggle');
+        const panicBtn = document.getElementById('panicBtn');
+        const emergencyBtns = document.querySelectorAll('.emergency-btn');
+        const guideContainer = document.getElementById('guideContainer');
+        const guideTitle = document.getElementById('guideTitle');
+        const guideContent = document.getElementById('guideContent');
+        const guideActions = document.getElementById('guideActions');
+        const progressBar = document.getElementById('progressBar');
+
+        // Initialize the app
+        function initApp() {
+            // Load saved theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+            
+            // Load voice preference
+            const savedVoicePref = localStorage.getItem('voiceEnabled') === 'true';
+            config.voiceEnabled = savedVoicePref;
+            updateVoiceToggle();
+            
+            // Load medical notes if they exist
+            if (!localStorage.getItem('medicalNotes')) {
+                localStorage.setItem('medicalNotes', JSON.stringify({
+                    bloodType: '',
+                    allergies: '',
+                    medications: '',
+                    conditions: '',
+                    emergencyContact: ''
+                }));
+            }
+            
+            // Set up event listeners
+            themeToggle.addEventListener('click', toggleTheme);
+            voiceToggle.addEventListener('click', toggleVoice);
+            panicBtn.addEventListener('click', () => startEmergency('panic'));
+            
+            emergencyBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const emergencyType = this.getAttribute('data-emergency');
+                    startEmergency(emergencyType);
+                });
+            });
+        }
+
+        // Theme functions
+        function setTheme(theme) {
+            config.currentTheme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            
+            const icon = theme === 'dark' ? 'fa-sun' : 'fa-moon';
+            themeToggle.innerHTML = `<i class="fas ${icon}"></i>`;
+        }
+
+        function toggleTheme() {
+            const newTheme = config.currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        }
+
+        // Voice functions
+        function updateVoiceToggle() {
+            const icon = config.voiceEnabled ? 'fa-volume-up' : 'fa-volume-mute';
+            voiceToggle.innerHTML = `<i class="fas ${icon}"></i>`;
+        }
+
+        function toggleVoice() {
+            config.voiceEnabled = !config.voiceEnabled;
+            localStorage.setItem('voiceEnabled', config.voiceEnabled);
+            updateVoiceToggle();
+            
+            if (config.voiceEnabled && guideContainer.classList.contains('active')) {
+                speakCurrentStep();
+            }
+        }
+
+        function speak(text) {
+            if (!config.voiceEnabled) return;
+            
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Emergency guide functions
+        function startEmergency(emergencyType) {
+            config.currentEmergency = emergencyType;
+            config.currentStep = 0;
+            config.decisionPath = [0];
+            
+            guideContainer.classList.add('active');
+            renderStep();
+        }
+
+        function renderStep() {
+            const emergency = emergencyData[config.currentEmergency];
+            let step;
+            
+            if (config.currentEmergency === 'panic' && config.decisionPath.length > 1) {
+                step = emergencyData.panic.cpr; // Simplified for demo
+            } else {
+                step = emergency.steps[config.decisionPath[config.decisionPath.length - 1]];
+            }
+            
+            guideTitle.textContent = emergency.title;
+            
+            // Calculate progress
+            const progress = ((config.decisionPath.length) / emergency.steps.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            
+            // Clear previous content
+            guideContent.innerHTML = '';
+            guideActions.innerHTML = '';
+            
+            // Create content based on step type
+            switch (step.type) {
+                case 'question':
+                    guideContent.innerHTML = `<p class="guide-step">${step.text}</p>`;
+                    
+                    const yesBtn = document.createElement('button');
+                    yesBtn.className = 'action-btn yes-btn';
+                    yesBtn.textContent = 'Yes';
+                    yesBtn.addEventListener('click', () => answerQuestion(step.yes));
+                    
+                    const noBtn = document.createElement('button');
+                    noBtn.className = 'action-btn no-btn';
+                    noBtn.textContent = 'No';
+                    noBtn.addEventListener('click', () => answerQuestion(step.no));
+                    
+                    guideActions.appendChild(yesBtn);
+                    guideActions.appendChild(noBtn);
+                    break;
+                    
+                case 'instruction':
+                    const instructions = step.text.split('\n').map(inst => `<p class="guide-step">${inst}</p>`).join('');
+                    guideContent.innerHTML = instructions;
+                    
+                    const backBtn = document.createElement('button');
+                    backBtn.className = 'action-btn back-btn';
+                    backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> Back';
+                    backBtn.addEventListener('click', goBack);
+                    
+                    const nextBtn = document.createElement('button');
+                    nextBtn.className = 'action-btn next-btn';
+                    nextBtn.innerHTML = 'Done <i class="fas fa-check"></i>';
+                    nextBtn.addEventListener('click', closeGuide);
+                    
+                    guideActions.appendChild(backBtn);
+                    guideActions.appendChild(nextBtn);
+                    break;
+                    
+                case 'options':
+                    guideContent.innerHTML = `<p class="guide-step">${step.text}</p>`;
+                    
+                    step.options.forEach(option => {
+                        const optionBtn = document.createElement('button');
+                        optionBtn.className = 'action-btn next-btn';
+                        optionBtn.textContent = option.text;
+                        optionBtn.style.marginBottom = '10px';
+                        optionBtn.addEventListener('click', () => selectOption(option.goto));
+                        guideContent.appendChild(optionBtn);
+                    });
+                    break;
+                    
+                case 'notes':
+                    renderMedicalNotes();
+                    break;
+            }
+            
+            // Speak the step if voice is enabled
+            if (config.voiceEnabled) {
+                speakCurrentStep();
+            }
+        }
+
+        function speakCurrentStep() {
+            const text = `${guideTitle.textContent}. ${guideContent.textContent}`;
+            speak(text);
+        }
+
+        function answerQuestion(nextStep) {
+            config.decisionPath.push(nextStep);
+            config.currentStep = nextStep;
+            renderStep();
+        }
+
+        function selectOption(goto) {
+            if (goto === 'cpr') {
+                config.decisionPath.push('cpr');
+                renderStep();
+            } else {
+                startEmergency(goto);
+            }
+        }
+
+        function goBack() {
+            if (config.decisionPath.length > 1) {
+                config.decisionPath.pop();
+                config.currentStep = config.decisionPath[config.decisionPath.length - 1];
+                renderStep();
+            } else {
+                closeGuide();
+            }
+        }
+
+        function closeGuide() {
+            guideContainer.classList.remove('active');
+            speechSynthesis.cancel(); // Stop any ongoing speech
+        }
+
+        // Medical notes functions
+        function renderMedicalNotes() {
+            const notes = JSON.parse(localStorage.getItem('medicalNotes'));
+            
+            let html = `
+                <div class="notes-form">
+                    <div class="form-group">
+                        <label>Blood Type:</label>
+                        <input type="text" id="bloodType" value="${notes.bloodType}" placeholder="e.g., O+">
+                    </div>
+                    <div class="form-group">
+                        <label>Allergies:</label>
+                        <textarea id="allergies" placeholder="List any allergies">${notes.allergies}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Current Medications:</label>
+                        <textarea id="medications" placeholder="List current medications">${notes.medications}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Medical Conditions:</label>
+                        <textarea id="conditions" placeholder="List any medical conditions">${notes.conditions}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Emergency Contact:</label>
+                        <input type="text" id="emergencyContact" value="${notes.emergencyContact}" placeholder="Name and phone number">
+                    </div>
+                    <button class="action-btn next-btn" id="saveNotes">Save Information</button>
+                </div>
+            `;
+            
+            guideContent.innerHTML = html;
+            
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'action-btn next-btn';
+            saveBtn.textContent = 'Save Information';
+            saveBtn.id = 'saveNotes';
+            saveBtn.addEventListener('click', saveMedicalNotes);
+            
+            guideActions.innerHTML = '';
+            guideActions.appendChild(saveBtn);
+        }
+
+        function saveMedicalNotes() {
+            const notes = {
+                bloodType: document.getElementById('bloodType').value,
+                allergies: document.getElementById('allergies').value,
+                medications: document.getElementById('medications').value,
+                conditions: document.getElementById('conditions').value,
+                emergencyContact: document.getElementById('emergencyContact').value
+            };
+            
+            localStorage.setItem('medicalNotes', JSON.stringify(notes));
+            
+            // Show confirmation
+            guideContent.innerHTML = '<p class="guide-step" style="color: var(--success)">Your medical information has been saved securely on this device.</p>';
+            
+            const backBtn = document.createElement('button');
+            backBtn.className = 'action-btn back-btn';
+            backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> Back';
+            backBtn.addEventListener('click', () => renderMedicalNotes());
+            
+            const doneBtn = document.createElement('button');
+            doneBtn.className = 'action-btn next-btn';
+            doneBtn.innerHTML = 'Done <i class="fas fa-check"></i>';
+            doneBtn.addEventListener('click', closeGuide);
+            
+            guideActions.innerHTML = '';
+            guideActions.appendChild(backBtn);
+            guideActions.appendChild(doneBtn);
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
